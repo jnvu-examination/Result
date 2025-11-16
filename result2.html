@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, initial-scale=1.0">
+    <title>Student Marksheet Portal (JNVU Integrated B.Sc.-B.Ed.)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Setting up Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            position: relative;
+        }
+        /* Updated for better fit on A4 Landscape print */
+        .marksheet-container {
+            max-width: 1300px; /* Increased Max Width */
+            width: 98%; 
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #marks-body {
+            font-size: 0.6rem; /* Slightly reduced font size */
+        }
+        tfoot {
+            font-size: 0.65rem; /* Slightly reduced font size */
+        }
+        thead th {
+            font-size: 0.5rem; /* Slightly reduced font size */
+        }
+        .compact-header {
+            padding-left: 0.3rem; /* Reduced padding */
+            padding-right: 0.3rem;
+            padding-top: 0.2rem;
+            padding-bottom: 0.2rem;
+            white-space: nowrap; 
+        }
+        
+        /* --- Photo Sizing Update: Photo को पूरी तरह से फिट करने के लिए (To perfectly fit the photo) --- */
+        .photo-box-container {
+            width: 104px; /* Image width (96px) + padding/border */
+            height: 124px; /* Image height (112px) + padding/border */
+            overflow: hidden;
+            display: block; 
+            border: 2px solid #D1D5DB; 
+            border-radius: 0.5rem; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            padding: 2px;
+        }
+        .photo-box-container img {
+            width: 96px; /* w-24 in Tailwind */
+            height: 112px; /* h-28 in Tailwind */
+            object-fit: cover;
+            border-radius: 0.25rem;
+            display: block; /* Removes any default space below image */
+        }
+        /* --- Search Section Styles (Non-Editable UI) --- */
+        .full-width-header {
+            background-color: #17A2B8; 
+            width: 100%;
+            padding: 0.75rem 1rem; 
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .full-width-header .text-container {
+             text-align: left; 
+             margin-left: 0.5rem;
+        }
+        .full-width-header h1 {
+             font-size: 1.5rem; 
+             line-height: 1.2;
+             font-weight: 700;
+        }
+        .full-width-header p {
+             font-size: 1rem; 
+             line-height: 1.2;
+        }
+        .search-container-bg {
+            background-image: url('https://files.catbox.moe/ojqxzy.jpg'); 
+            background-size: cover;
+            background-position: center;
+            width: 100%;
+            height: 30vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .custom-card {
+            max-width: 550px; 
+            width: 90%;
+            overflow: hidden;
+            border-radius: 0.5rem; 
+            background-color: rgba(255, 255, 255, 0.0); 
+            box-shadow: none; 
+            border: none;
+            padding: 1rem;
+        }
+        .result-title-bar {
+            background-color: #20C997; 
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+        .roll-input-field {
+            height: 38px; 
+            padding: 0.25rem 0.75rem;
+            border: 1px solid #ccc;
+            background-color: white;
+        }
+        .get-result-btn, .reset-btn {
+            background-color: #ffc107; 
+            color: #212529;
+            font-weight: 700;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .search-footer {
+            background-color: #20C997;
+            color: white;
+            font-size: 0.875rem;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            padding: 0.5rem 0;
+        }
+        #app {
+            padding-top: 5rem;
+        }
+        /* --- Print Styles (Aggressively Adjusted for single page fit on A4 Landscape) --- */
+        @media print {
+            @page { 
+                size: A4 landscape;
+                margin: 0.05cm; /* Extreme reduction in margin */
+            }
+            .no-print, .search-container-bg, .search-footer, #fixed-header-search {
+                display: none !important;
+            }
+            #marksheet-display {
+                display: block !important;
+                opacity: 1 !important;
+                /* Adjust table width to fill the page exactly */
+                max-width: 100% !important; 
+                width: 100% !important;
+                margin: 0 auto;
+                padding: 0.4cm !important; /* Reduced container padding */
+                border: none !important;
+                box-shadow: none !important;
+            }
+            /* Force the table font size to ensure fit */
+            #marksheet-display table {
+                font-size: 0.55rem !important; /* Aggressively reduced font size */
+            }
+            /* Aggressive Spacing Reduction for the table content */
+            #marks-body td, #marks-body th, thead th {
+                padding: 0.1rem 0.1rem !important; /* Very small padding */
+                line-height: 1.05 !important; /* Tight line height */
+            }
+            thead th, tfoot td {
+                font-size: 0.55rem !important;
+                padding-top: 0.1rem !important;
+                padding-bottom: 0.1rem !important;
+            }
+            /* Reduce space in header details */
+            .marksheet-header h1, .marksheet-header p {
+                 line-height: 1.0;
+                 margin-top: 0;
+                 margin-bottom: 0;
+            }
+            .marksheet-header img {
+                 height: 1.5cm !important;
+                 width: 1.5cm !important;
+            }
+            .marksheet-header {
+                margin-bottom: 0.5rem !important;
+                padding-top: 0 !important;
+            }
+            .text-lg { font-size: 0.7rem !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Content Container -->
+    <div id="app" class="flex flex-col items-center">
+        
+        <!-- --- New Full-Width Header Bar --- -->
+        <div class="full-width-header fixed top-0 z-50 no-print" id="fixed-header-search">
+            <!-- University Logo and Name -->
+            <img src="https://files.catbox.moe/s16t2w.jpg" 
+                alt="JNVU Logo" 
+                class="h-10 w-10 mr-3 rounded-full border border-white shadow"
+                onerror="this.onerror=null; this.src='https://files.catbox.moe/s16t2w.jpg';"
+            >
+            <div class="text-white text-container">
+                <p class="text-base font-light leading-snug">जय नारायण व्यास विश्वविद्यालय, जोधपुर</p>
+                <h1 class="text-xl font-bold leading-snug">Jai Narayan Vyas University, Jodhpur</h1>
+            </div>
+        </div>
+
+
+        <!-- Search Section -->
+        <div id="search-section" class="search-container-bg">
+            <div class="custom-card transition-all duration-300">
+                
+                <!-- Result Title Bar -->
+                <div class="result-title-bar text-center">
+                    <h2 class="text-white text-xl font-semibold">
+                        B.SC.- B.Ed. - II Year Examination Result Portal
+                    </h2>
+                </div>
+                
+                <!-- Input Form Section -->
+                <div class="p-6 pt-4 pb-4 space-y-4">
+                    <div class="flex flex-wrap items-center justify-center space-y-2 md:space-y-0 md:flex-nowrap md:space-x-4">
+                        
+                        <label for="roll-input" class="text-white text-lg font-medium text-shadow-lg whitespace-nowrap">Roll Number :</label>
+                        
+                        <input type="text" id="roll-input"  class="w-full md:w-auto flex-grow roll-input-field rounded-sm focus:ring-teal-500 focus:border-teal-500 text-lg shadow-inner" onkeypress="handleKey(event)">
+                        
+                    </div>
+                    
+                    <div class="flex justify-center space-x-6 pt-4">
+                        <button onclick="searchMarksheet()" class="get-result-btn hover:bg-yellow-600 font-bold py-2 px-6 rounded-sm transition duration-200 text-base">
+                            Get Result
+                        </button>
+                        <button onclick="resetRollInput()" class="reset-btn hover:bg-yellow-600 font-bold py-2 px-6 rounded-sm transition duration-200 text-base">
+                            Reset
+                        </button>
+                    </div>
+
+                    <!-- Message/Error Box - Removed Demo Roll Numbers as requested -->
+                    <div id="message-box" class="mt-4 text-center text-yellow-300 font-medium text-sm text-shadow-md">
+                        <!-- Default empty, status messages will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search Page Footer -->
+        <div class="search-footer w-full text-center py-2 no-print">
+             Designed & Developed by SSD
+        </div>
+
+
+        <!-- Marksheet Display Section -->
+        <div id="marksheet-display" class="marksheet-container mt-6 hidden bg-white rounded-xl shadow-2xl p-4 sm:p-8 border-t-8 border-gray-600 transition-opacity duration-500 opacity-0">
+            
+            <!-- --- Marksheet Header --- -->
+            <header class="marksheet-header text-center mb-8 pt-4"> 
+                <div class="flex flex-col sm:flex-row items-center justify-center space-x-3 mb-3">
+                    <img src="https://files.catbox.moe/s16t2w.jpg" 
+                         alt="JNVU Logo" 
+                         class="h-16 w-16 sm:h-20 sm:w-20 rounded-full shadow-lg border-2 border-gray-600"
+                         onerror="this.onerror=null; this.src='https://files.catbox.moe/s16t2w.jpg';"
+                    >
+                    <div class="text-center sm:text-left">
+                        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800">
+                            JAI NARAIN VYAS UNIVERSITY, JODHPUR
+                        </h1>
+                        <p class="text-xl sm:text-2xl font-semibold text-gray-700 mt-1">
+                            INTEGRATED B.SC.-B.ED. Part - II EXAMINATION - 2025
+                        </p>
+                    </div>
+                </div>
+                
+                <p class="text-lg text-gray-500 font-medium border-t pt-2">
+                    PROVISIONAL MARKSHEET
+                </p>
+            </header>
+
+            <!-- Student Details Header with Photo -->
+            <div class="flex flex-col sm:flex-row justify-between border-b pb-4 mb-4 text-gray-700">
+                <div class="space-y-2 flex-grow">
+                    <div class="flex flex-wrap text-base sm:text-lg"><span class="font-bold w-full sm:w-1/2">ROLL No.:</span><span id="detail-roll" class="font-semibold text-gray-800 w-full sm:w-1/2"></span></div>
+                    <div class="flex flex-wrap text-base sm:text-lg"><span class="font-bold w-full sm:w-1/2">CANDIDATE'S NAME:</span><span id="detail-name" class="font-semibold text-gray-900 w-full sm:w-1/2"></span></div>
+                    <div class="flex flex-wrap text-base sm:text-lg"><span class="font-bold w-full sm:w-1/2">FATHER'S NAME:</span><span id="detail-father" class="w-full sm:w-1/2"></span></div>
+                    <div class="flex flex-wrap text-base sm:text-lg"><span class="font-bold w-full sm:w-1/2">MOTHER'S NAME:</span><span id="detail-mother" class="w-full sm:w-1/2"></span></div>
+                </div>
+                <!-- UPDATED Photo Container with new CSS class to ensure tight fit -->
+                <div class="flex-shrink-0 mt-4 sm:mt-0 sm:ml-6 flex justify-center">
+                    <div class="photo-box-container">
+                        <img id="detail-photo" 
+                             src="https://placehold.co/100x120/E5E7EB/4B5563?text=Photo" 
+                             alt="Student Photo" 
+                             class=""
+                             onerror="this.onerror=null; this.src='https://placehold.co/100x120/E5E7EB/4B5563?text=Photo';"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marksheet Table -->
+            <div class="border rounded-lg shadow-inner w-full">
+                <table class="w-full divide-y divide-gray-300">
+                    <!-- Primary Dark Header -->
+                    <thead class="bg-gray-800 text-white uppercase tracking-wider">
+                        <tr>
+                            <th scope="col" rowspan="2" class="compact-header text-center font-bold border-r w-[4%]">Code</th> 
+                            <th scope="col" rowspan="2" class="compact-header text-left font-bold border-r w-[25%]">Subject</th>
+                            <th scope="col" rowspan="2" class="compact-header text-center font-bold border-r w-[4%]">Max Marks</th>
+                            <th scope="col" rowspan="2" class="compact-header text-center font-bold border-r w-[4%]">Min Marks</th>
+
+                            <th colspan="4" scope="colgroup" class="compact-header text-center font-bold border-r">Theory Marks</th>
+                            
+                            <th colspan="4" scope="colgroup" class="compact-header text-center font-bold border-r">Internal Marks</th>
+                            
+                            <th colspan="2" scope="colgroup" class="compact-header text-center font-bold border-r">Practical Marks</th>
+                            
+                            <th scope="col" rowspan="2" class="compact-header text-center font-bold border-r w-[5%]">Subject Total</th>
+                            <th scope="col" rowspan="2" class="compact-header text-center font-bold w-[7%]">Status</th>
+                        </tr>
+                        <!-- Secondary Dark Header -->
+                        <tr class="bg-gray-700 text-white text-xs">
+                            <th class="px-1 py-1 text-center border-r">I</th>
+                            <th class="px-1 py-1 text-center border-r">II</th>
+                            <th class="px-1 py-1 text-center border-r">III</th>
+                            <th class="px-2 py-1 text-center border-r font-semibold">Total (Ext)</th>
+
+                            <th class="px-1 py-1 text-center border-r">I</th>
+                            <th class="px-1 py-1 text-center border-r">II</th>
+                            <th class="px-1 py-1 text-center border-r">III</th>
+                            <th class="px-2 py-1 text-center border-r font-semibold">Total (Int)</th>
+                            
+                            <th class="px-2 py-1 text-center border-r">Obt</th>
+                            <th class="px-2 py-1 text-center border-r">Int</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marks-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Marksheet data will be inserted here by JavaScript -->
+                    </tbody>
+                    <tfoot class="bg-gray-100 font-bold text-gray-800 border-t-2 border-gray-400">
+                        <tr>
+                            <td class="px-2 py-3 text-left font-extrabold" colspan="2">Grand Total:</td>
+                            <td id="grand-total-max" class="px-2 py-3 text-center text-gray-800">925</td> 
+                            <td id="grand-total-min" class="px-2 py-3 text-center text-gray-800 border-r">370</td> 
+                            
+                            <td colspan="11" class="px-2 py-3 border-r"></td>
+
+                            <td id="grand-total-obtained" class="px-2 py-3 text-center font-bold text-gray-800 border-r">0</td>
+                            <td class="px-2 py-3 text-center"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Result, Print Button and Footer -->
+            <div class="mt-6 w-full">
+                <!-- Result Section -->
+                <div class="p-4 border border-dashed rounded-lg bg-yellow-50">
+                    <p class="text-lg font-bold text-gray-800">Result: <span id="overall-result" class="text-red-700">...</span></p>
+                    <p class="text-sm text-gray-500 mt-2">RESULT DECLARE DATE: 17/11/2025</p>
+                </div>
+
+                <!-- Print and Back Button Group (no-print class added) -->
+                <div class="mt-4 flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 no-print">
+                    <!-- Print Button -->
+                    <button onclick="window.print()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-xl transition duration-200 text-lg flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm2 5h6v4H7V9z" clip-rule="evenodd" />
+                        </svg>
+                        मार्कशीट प्रिंट करें (Print Marksheet)
+                    </button>
+                    <!-- Back Button -->
+                    <button onclick="resetApp()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-xl transition duration-200 text-lg flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        Back to Search
+                    </button>
+                </div>
+            
+                <!-- Footer -->
+                <p class="text-xs text-center text-gray-400 mt-4">
+                    Note - This is a computer generated marksheet, doesn't require signature. (Simulated Data)
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. केंद्रीय विषय परिभाषाएँ (Central Subject Definitions) ---
+        // कोड आपकी मांग के अनुसार अपडेट किए गए हैं 
+        const SUBJECT_DEFINITIONS = [
+            // B.Ed. Compulsory (Max 75 Ext, Max 25 Int) Min 40. Ext Pass: 25
+            { code: "5501", name: "Fundamentals of Contemporary Indian Education", max: 100, min: 40, group: "Compulsory Papers", extPass: 25, internalOnly: false, type: "Theory" }, // B.Ed. Fundamental Paper
+            { code: "5502", name: "Schooling, Socialisation and Identity", max: 100, min: 40, group: "Compulsory Papers", extPass: 25, internalOnly: false, type: "Theory" }, // B.Ed. Schooling Paper
+            // B.Ed. Internal Only (Max 50 Int) Min 20. Ext Pass: N/A
+            { code: "E-202", name: "Learning Enrichment through Information and Communication Technology", max: 50, min: 20, group: "Compulsory Papers", extPass: 0, internalOnly: true, type: "Internal" }, 
+
+            // Science Papers (Theory Ext Pass: 42. Practical: true)
+            { code: "5506", name: "Botany", max: 225, min: 90, group: "Science Papers", extPass: 42, practical: true, type: "Theory" }, // Botany Paper
+            { code: "5507", name: "Zoology", max: 225, min: 90, group: "Science Papers", extPass: 42, practical: true, type: "Theory" }, // Zoology Paper
+            { code: "5504", name: "Physics", max: 225, min: 90, group: "Science Papers", extPass: 42, practical: true, type: "Theory" }, 
+            
+            // Mathematics (Theory Ext Pass: 72. Practical: false)
+            { code: "5505", name: "Mathematics", max: 225, min: 90, group: "Science Papers", extPass: 72, practical: false, type: "Theory" }, 
+            
+            { code: "5503", name: "Chemistry", max: 225, min: 90, group: "Science Papers", extPass: 42, practical: true, type: "Theory" }, // Chemistry Paper
+        ];
+        
+        // --- 2. छात्र का स्थायी विवरण (नाम, रोल नंबर, फोटो) ---
+        const ALL_STUDENTS_DETAILS = {
+            "24SED25734": { roll: "24SED25734", name: "MANISH KUMAR", father: "RAJESH SINGH", mother: "SAVITA DEVI", photoUrl: "https://placehold.co/100x120/475569/FFFFFF?text=P-01" },
+            "24SED25735": { roll: "24SED25735", name: "ANAND MAKWANA", father: "RATAN LAL", mother: "BHANWARI DEVI ", photoUrl: "https://files.catbox.moe/vqnt3r.jpg" },
+            "24SED25736": { roll: "24SED25736", name: "ANKOL BISHNOI", father: "SAHEERAM BISHNOI", mother: "SHANTI BISNOI", photoUrl: "https://placehold.co/100x120/475569/FFFFFF?text=P-03" },
+            "24SED25737": { roll: "24SED25737", name: "BHOOPENDRA SINGH KERELA", father: "RAMDEEN KERELA", mother: "DURGA PALECHA", photoUrl: "https://files.catbox.moe/iezeub.jpg" },
+            "24SED25738": { roll: "24SED25738", name: "CHANDRA VEER SINGH", father: "BHOOPAT SINGH", mother: "BASANT KANWARI", photoUrl: "https://files.catbox.moe/7a495j.jpg" },
+            "24SED25739": { roll: "24SED25739", name: "GOVIND DHATARWAL", father: "BABU LAL CHOUDHARY", mother: "SANTOSH CHOUDHARY", photoUrl: "https://files.catbox.moe/0hbkup.jpg" },
+            "24SED25740": { roll: "24SED25740", name: "HARSHIT PATEL", father: "OM PRAKASH", mother: "MIRA DEVI", photoUrl: "https://files.catbox.moe/1pcdyr.jpg" },
+            "24SED25741": { roll: "24SED25741", name: "KHUSHVEER SINGH", father: "RATAN SINGH", mother: "LAXMI KANWAR", photoUrl: "https://files.catbox.moe/qi7mq5.jpg" },
+            "24SED25742": { roll: "24SED25742", name: "MAHENDRA PATEL", father: "KEHRA RAM PATEL", mother: "DAKHU DEVI", photoUrl: "https://files.catbox.moe/jzlnf1.jpg" },
+            "24SED25743": { roll: "24SED25743", name: "MAHESH", father: "BANSHI LAL", mother: "GEETA DEVI", photoUrl: "https://files.catbox.moe/ems2cz.jpg" },
+            "24SED25744": { roll: "24SED25744", name: "MAHIPAL", father: "BHANWAR LAL ", mother: "GUDDI DEVI", photoUrl: "https://placehold.co/100x120/475569/FFFFFF?text=P-11" },
+            "24SED25745": { roll: "24SED25745", name: "MANISH SINGH", father: "LAXMAN SINGH", mother: "DURGA", photoUrl: "https://files.catbox.moe/wpeayg.jpg" },
+            "24SED25746": { roll: "24SED25746", name: "MOHAMMED AAYAN", father: "FARUK MOHAMMED", mother: "APSARA BEGUMI", photoUrl: "https://files.catbox.moe/4izp4y.jpg" },
+            "24SED25747": { roll: "24SED25747", name: "MOHAMMED OVESH", father: "AARIF MOHAMMED", mother: "NASEEM BANO", photoUrl: "https://files.catbox.moe/4eg49h.jpg" },
+            "24SED25748": { roll: "24SED25748", name: "MOHIT PATEL", father: "OM PRAKASH PATEL", mother: "CHAMPA DEVI", photoUrl: "https://files.catbox.moe/b4tt0b.jpg" },
+            "24SED25749": { roll: "24SED25749", name: "MUKESH POPAWAT", father: "JAGDISH", mother: "SONI DEWI", photoUrl: "https://files.catbox.moe/fziiwh.jpg" },
+            "24SED25750": { roll: "24SED25750", name: "MUKESH RAM ", father: "MAHENDRA RAM", mother: "SIPU DEVI", photoUrl: "https://files.catbox.moe/4dlnhe.jpg" },
+            "24SED25751": { roll: "24SED25751", name: "PIYUSH", father: "RAKESH KUMAR", mother: "POOJA", photoUrl: "https://files.catbox.moe/yavkcj.jpg" },
+            "24SED25752": { roll: "24SED25752", name: "PRADEEP", father: "CHETAN PRAKASH", mother: "MANJU DEVI", photoUrl: "https://files.catbox.moe/kp9fx3.jpg" },
+            "24SED25753": { roll: "24SED25753", name: "PRAKASH", father: "BHINYA RAM", mother: "CHHOTI DEVI", photoUrl: "https://files.catbox.moe/6nqwpc.jpg" },
+            "24SED25754": { roll: "24SED25754", name: "PRAKASH SINGH RAJPUROHIT", father: "MADAN GOPAL", mother: "SURAJ KANWAR", photoUrl: "https://files.catbox.moe/6jt4uq.jpg" },
+            "24SED25755": { roll: "24SED25755", name: "PRINCE DEPAN", father: "TEJPAL DEPAN", mother: "TARA DEVII", photoUrl: "https://files.catbox.moe/qqkc8l.jpg" },
+            "24SED25756": { roll: "24SED25756", name: "RAJMAL MEENA", father: "GOPI LAL MEENA", mother: "SUSHILA BAI MEENA", photoUrl: "https://files.catbox.moe/knvmri.jpg" },
+            "24SED25757": { roll: "24SED25757", name: "RAKESH PURI", father: "KAILASH PURI", mother: "MUNNI DEVI", photoUrl: "https://files.catbox.moe/46cqlq.jpg" },
+            "24SED25758": { roll: "24SED25758", name: "RAMAVTAR", father: "KANA RAM ", mother: "GAVARI DEWI", photoUrl: "https://files.catbox.moe/efzu41.jpg" },
+            "24SED25759": { roll: "24SED25759", name: "RAVI PRAKASH", father: "SAMPAT LAL BHEEL", mother: "SANTOSH", photoUrl: "https://files.catbox.moe/ajo5ey.jpg" },
+            "24SED25760": { roll: "24SED25760", name: "RAVINDER JAKHAR", father: "HAPU RAM JAKHAR", mother: "SHARDA", photoUrl: "https://files.catbox.moe/5oyac5.jpg" },
+            "24SED25761": { roll: "24SED25761", name: "SHIVPAL SINGH", father: "ARJUN SINGH", mother: "BHANWAR KANWAR", photoUrl: "https://files.catbox.moe/78rhmv.jpg" },
+            "24SED25762": { roll: "24SED25762", name: "SUNIL PANWAR", father: "GUMNA RAM", mother: "GEETA DEVI", photoUrl: "https://placehold.co/100x120/475569/FFFFFF?text=P-29" },
+            "24SED25763": { roll: "24SED25763", name: "SURESH", father: "PAWAN RAM", mother: "BHATIYA DEVI", photoUrl: "https://files.catbox.moe/isqh70.jpg" },
+            "24SED25764": { roll: "24SED25764", name: "TARUN SOLANKI", father: "JAGDISH PRASAD", mother: "MANISHA", photoUrl: "https://files.catbox.moe/se071r.jpg" },
+            "24SED25765": { roll: "24SED25765", name: "YOGESH SONI", father: "HEM RAJ SONI", mother: "TULSI DEVI", photoUrl: "https://files.catbox.moe/ddnydj.jpg" },
+            "24SED25766": { roll: "24SED25766", name: "AARADHYA CHOUDHARY", father: "ASHOK KUMAR ", mother: "GEETA DEVI", photoUrl: "https://placehold.co/100x120/475569/FFFFFF?text=P-33" },
+            "24SED25767": { roll: "24SED25767", name: "ANJALI KUMAWAT", father: "DILIP KUMAR", mother: "LALITA", photoUrl: "https://files.catbox.moe/y3f6pc.jpg" },
+            "24SED25768": { roll: "24SED25768", name: "ARCHANA SEERVI", father: "MOHAN LAL", mother: "KAMALA SEERVI", photoUrl: "https://files.catbox.moe/gw4pdk.jpg" },
+            "24SED25769": { roll: "24SED25769", name: "BHAWANA SONI", father: "LALARAM SONI", mother: "DHANI DEVI", photoUrl: "https://files.catbox.moe/vwea7k.jpg" },
+            "24SED25770": { roll: "24SED25770", name: "DARSHNA CHARAN", father: "BHAGWANT SINGH CHARAN", mother: "SANTOSH KANWAR", photoUrl: "https://files.catbox.moe/xsn04u.jpg" },
+            "24SED25771": { roll: "24SED25771", name: "DEEPIKA PATEL", father: "PARAS RAM PATEL", mother: "NIRMALA PATEL", photoUrl: "https://files.catbox.moe/p8jjn2.jpg" },
+            "24SED25772": { roll: "24SED25772", name: "KUMKUM", father: "PRAMOD KUMAR NAINIWAL", mother: "VIMALA NAINIWAL", photoUrl: "https://files.catbox.moe/kabf4t.jpg" },
+            "24SED25773": { roll: "24SED25773", name: "NEETU", father: "OM PRAKASH", mother: "SHYAMA DEVI", photoUrl: "https://files.catbox.moe/y1savp.jpg" },
+            "24SED25774": { roll: "24SED25774", name: "MADHURI SINGH", father: "PRATAP SINGH", mother: "GEETA DEVI", photoUrl: "https://placehold.co/100x120/475569/FFFFFF?text=P-41" },
+            "24SED25775": { roll: "24SED25775", name: "RAKSHA DEWASI", father: "BHARAT RAM", mother: "SHOBHA", photoUrl: "https://files.catbox.moe/4sa1z9.jpg" },
+            "24SED25776": { roll: "24SED25776", name: "SANDHYA MEHCHAND", father: "MOOLA RAM", mother: "SANTOSH DEVI", photoUrl: "https://files.catbox.moe/os8j6e.jpg" },
+            "24SED25777": { roll: "24SED25777", name: "SAPNA", father: "LAXMI NARAYAN", mother: "ASHA DEVI", photoUrl: "https://files.catbox.moe/4sa1z9.jpg" },
+            "24SED25778": { roll: "24SED25778", name: "SUPRIYA", father: "MADANLAL", mother: "DHAPU DEVI", photoUrl: "https://files.catbox.moe/0p7j20.jpg" },
+            "24SED25779": { roll: "24SED25779", name: "TONISHKA PAREEK", father: "SUNIL KUMAR PAREEK", mother: "UMA DEVI", photoUrl: "https://files.catbox.moe/0haq40.jpg" },
+            "24SED25780": { roll: "24SED25780", name: "UJJWAL TAK", father: "MANAK CHAND TAK", mother: "SANJU TAK", photoUrl: "https://files.catbox.moe/kw4y3i.jpg" },
+            "24SED25781": { roll: "24SED25781", name: "MANISHA CHOUDHARY", father: "RAMAKISHAN", mother: "GENDA DEVI", photoUrl: "https://files.catbox.moe/4dlnhe.jpg" },
+        };
+        
+        // --- 3. सभी छात्रों के अंकों का डेटा (यहाँ से अंक बदलें!) ---
+        // कोड आपकी मांग के अनुसार अपडेट किए गए हैं 
+        const ALL_STUDENTS_MARKS_DATA = {
+            // Roll 24SED25734: PASS (BZC Group - Balanced Pass)
+            "24SED25734": { subjects: [
+                { code: "5501", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, // B.Ed. Fundamental Paper
+                { code: "5502", theoryI: 35, internalI: 23, practicalObt: 0, practicalInt: 0 }, // B.Ed. Schooling Paper
+                { code: "E-202", theoryI: 0, internalI: 40, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5506", theoryI: 20, theoryII: 22, theoryIII: 25, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 35, practicalInt: 12 }, // Botany
+                { code: "5507", theoryI: 25, theoryII: 27, theoryIII: 28, internalI: 4, internalII: 5, internalIII: 5, practicalObt: 40, practicalInt: 10 }, // Zoology
+                { code: "5503", theoryI: 22, theoryII: 23, theoryIII: 21, internalI: 5, internalII: 4, internalIII: 5, practicalObt: 38, practicalInt: 12 }, // Chemistry
+            ]},
+            
+            // Roll 24SED25735: PASS (PMC Group - Balanced Pass)
+            "24SED25735": { subjects: [
+                { code: "5501", theoryI: 45, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 30, internalI: 25, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 42, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 18, theoryII: 21, theoryIII: 21, internalI: 5, internalII: 4, internalIII: 5, practicalObt: 30, practicalInt: 8 }, // Physics
+                { code: "5505", theoryI: 26, theoryII: 27, theoryIII: 26, internalI: 6, internalII: 8, internalIII: 7, practicalObt: 0, practicalInt: 0 }, // Mathematics
+                { code: "5503", theoryI: 23, theoryII: 21, theoryIII: 25, internalI: 6, internalII: 5, internalIII: 6, practicalObt: 41, practicalInt: 9 }, // Chemistry
+            ]},
+            
+            // Roll 24SED25736: ABSENT
+            "24SED25736": { subjects: [
+                 { code: "5501", theoryI: 'AB', internalI: 'AB', practicalObt: 'AB', practicalInt: 'AB' }, 
+                 { code: "5502", theoryI: 'AB', internalI: 'AB', practicalObt: 'AB', practicalInt: 'AB' }, 
+                 { code: "E-202", theoryI: 'AB', internalI: 'AB', practicalObt: 'AB', practicalInt: 'AB' }, 
+                 { code: "5506", theoryI: 'AB', theoryII: 'AB', theoryIII: 'AB', internalI: 'AB', internalII: 'AB', internalIII: 'AB', practicalObt: 'AB', practicalInt: 'AB' }, 
+                 { code: "5507", theoryI: 'AB', theoryII: 'AB', theoryIII: 'AB', internalI: 'AB', internalII: 'AB', internalIII: 'AB', practicalObt: 'AB', practicalInt: 'AB' }, 
+                 { code: "5503", theoryI: 'AB', theoryII: 'AB', theoryIII: 'AB', internalI: 'AB', internalII: 'AB', internalIII: 'AB', practicalObt: 'AB', practicalInt: 'AB' }, 
+            ]},
+            
+            // Roll 24SED25738: RE-APPEAR (Phy & Math) - Theory Total Low
+            "24SED25738": { subjects: [
+                { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 10, theoryII: 11, theoryIII: 13, internalI: 6, internalII: 5, internalIII: 6, practicalObt: 35, practicalInt: 8 }, // Theory Ext < 42
+                { code: "5505", theoryI: 20, theoryII: 19, theoryIII: 25, internalI: 8, internalII: 9, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // Theory Ext < 72
+                { code: "5503", theoryI: 20, theoryII: 27, theoryIII: 22, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 34, practicalInt: 10 }, 
+            ]},
+            
+            // Roll 24SED25739: RE-APPEAR (Phy & Math) - Theory Total Low
+            "24SED25739": { subjects: [
+                { code: "5501", theoryI: 32, internalI: 22, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 30, internalI: 24, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 38, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 8, theoryII: 11, theoryIII: 5, internalI: 6, internalII: 4, internalIII: 7, practicalObt: 30, practicalInt: 10 }, // Theory Ext < 42
+                { code: "5505", theoryI: 22, theoryII: 12, theoryIII: 24, internalI: 10, internalII: 10, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // Theory Ext < 72
+                { code: "5503", theoryI: 19, theoryII: 17, theoryIII: 21, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 45, practicalInt: 10 }, 
+            ]},
+
+            // Roll 24SED25749: RE-APPEAR (Phy) - Theory Total Low
+            "24SED25749": { subjects: [
+                { code: "5501", theoryI: 45, internalI: 22, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 32, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 13, theoryII: 15, theoryIII: 11, internalI: 6, internalII: 4, internalIII: 7, practicalObt: 35, practicalInt: 10 }, // Theory Ext < 42
+                { code: "5505", theoryI: 40, theoryII: 45, theoryIII: 42, internalI: 10, internalII: 10, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // PASS
+                { code: "5503", theoryI: 24, theoryII: 21, theoryIII: 25, internalI: 6, internalII: 5, internalIII: 7, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+
+            // Roll 24SED25751: RE-APPEAR (Phy) - Theory Total Low
+            "24SED25751": { subjects: [
+                { code: "5501", theoryI: 40, internalI: 21, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 38, internalI: 19, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 15, theoryII: 12, theoryIII: 12, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 38, practicalInt: 10 }, // Theory Ext < 42
+                { code: "5505", theoryI: 29, theoryII: 27, theoryIII: 31, internalI: 12, internalII: 10, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // PASS
+                { code: "5503", theoryI: 30, theoryII: 32, theoryIII: 30, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 45, practicalInt: 12 }, 
+            ]},
+
+             // Roll 24SED25754: RE-APPEAR (Phy & Math) - Theory Total Low
+            "24SED25754": { subjects: [
+                { code: "5501", theoryI: 34, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 38, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 10, theoryII: 18, theoryIII: 15, internalI: 4, internalII: 3, internalIII: 4, practicalObt: 25, practicalInt: 8 }, // Theory Ext < 42
+                { code: "5505", theoryI: 33, theoryII: 14, theoryIII: 25, internalI: 8, internalII: 9, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // Theory Ext < 72
+                { code: "5503", theoryI: 25, theoryII: 17, theoryIII: 21, internalI: 4, internalII: 5, internalIII: 6, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+
+             // Roll 24SED25755: RE-APPEAR (Phy) - Theory Total Low
+            "24SED25755": { subjects: [
+                { code: "5501", theoryI: 35, internalI: 22, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 40, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 17, theoryII: 10, theoryIII: 12, internalI: 6, internalII: 4, internalIII: 7, practicalObt: 35, practicalInt: 10 }, // Theory Ext < 42
+                { code: "5505", theoryI: 28, theoryII: 30, theoryIII: 29, internalI: 7, internalII: 10, internalIII: 8, practicalObt: 0, practicalInt: 0 }, // PASS
+                { code: "5503", theoryI: 22, theoryII: 19, theoryIII: 18, internalI: 6, internalII: 5, internalIII: 5, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+
+            // Roll 24SED25756: RE-APPEAR (Phy & Math) - Theory Total Low
+            "24SED25756": { subjects: [
+                { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 10, theoryII: 11, theoryIII: 10, internalI: 4, internalII: 3, internalIII: 4, practicalObt: 25, practicalInt: 8 }, // Theory Ext < 42
+                { code: "5505", theoryI: 20, theoryII: 20, theoryIII: 25, internalI: 8, internalII: 9, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // Theory Ext < 72
+                { code: "5503", theoryI: 19, theoryII: 17, theoryIII: 17, internalI: 5, internalII: 5, internalIII: 6, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+
+            // Roll 24SED25760: RE-APPEAR (Phy & Math) - Theory Total Low
+            "24SED25760": { subjects: [
+                { code: "5501", theoryI: 37, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 41, internalI: 19, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 16, theoryII: 11, theoryIII: 10, internalI: 4, internalII: 3, internalIII: 4, practicalObt: 25, practicalInt: 8 }, // Theory Ext < 42
+                { code: "5505", theoryI: 27, theoryII: 19, theoryIII: 25, internalI: 8, internalII: 9, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // Theory Ext < 72
+                { code: "5503", theoryI: 17, theoryII: 21, theoryIII: 18, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+
+            // Roll 24SED25763: RE-APPEAR (Phy) - Theory Total Low
+            "24SED25763": { subjects: [
+                { code: "5501", theoryI: 35, internalI: 22, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 12, theoryII: 6, theoryIII: 22, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 38, practicalInt: 10 }, // Theory Ext < 42
+                { code: "5505", theoryI: 20, theoryII: 21, theoryIII: 33, internalI: 12, internalII: 10, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // PASS
+                { code: "5503", theoryI: 31, theoryII: 20, theoryIII: 32, internalI: 6, internalII: 5, internalIII: 6, practicalObt: 45, practicalInt: 12 }, 
+            ]},
+
+            // Roll 24SED25779: BZC Group - RE-APPEAR (Botany/Zoology) - Theory Total Low
+            "24SED25779": { subjects: [ 
+                { code: "5501", theoryI: 35, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 30, internalI: 22, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 38, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5506", theoryI: 19, theoryII: 15, theoryIII: 22, internalI: 6, internalII: 4, internalIII: 6, practicalObt: 35, practicalInt: 10 }, // Theory Ext < 42 (RE-APPEAR)
+                { code: "5507", theoryI: 22, theoryII: 15, theoryIII: 19, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 39, practicalInt: 10 }, // Theory Ext < 42 (RE-APPEAR)
+                { code: "5503", theoryI: 25, theoryII: 25, theoryIII: 28, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 37, practicalInt: 10 }, // PASS
+            ]},
+            
+            "24SED25737": { subjects: [ // BZC Group
+                { code: "5501", theoryI: 38, internalI: 22, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 42, internalI: 25, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 45, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5506", theoryI: 18, theoryII: 16, theoryIII: 19, internalI: 8, internalII: 9, internalIII: 5, practicalObt: 40, practicalInt: 10 }, 
+                { code: "5507", theoryI: 22, theoryII: 20, theoryIII: 23, internalI: 6, internalII: 5, internalIII: 9, practicalObt: 45, practicalInt: 12 }, 
+                { code: "5503", theoryI: 21, theoryII: 19, theoryIII: 31, internalI: 6, internalII: 5, internalIII: 4, practicalObt: 33, practicalInt: 10 }, 
+            ]},
+            
+            // बाकी बचे रोल नंबर्स के लिए डिफ़ॉल्ट "PASS" मार्क्स (Remaining Roll Numbers)
+            "24SED25740": { subjects: [ // BZC Group
+                { code: "5501", theoryI: 38, internalI: 22, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 42, internalI: 25, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 45, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5506", theoryI: 18, theoryII: 16, theoryIII: 19, internalI: 8, internalII: 9, internalIII: 5, practicalObt: 40, practicalInt: 10 }, 
+                { code: "5507", theoryI: 22, theoryII: 20, theoryIII: 23, internalI: 6, internalII: 5, internalIII: 9, practicalObt: 45, practicalInt: 12 }, 
+                { code: "5503", theoryI: 21, theoryII: 19, theoryIII: 31, internalI: 6, internalII: 5, internalIII: 4, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+            "24SED25741": { subjects: [ // PMC Group
+                { code: "5501", theoryI: 35, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 40, internalI: 22, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 38, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 20, theoryII: 21, theoryIII: 19, internalI: 7, internalII: 4, internalIII: 7, practicalObt: 35, practicalInt: 10 }, 
+                { code: "5505", theoryI: 37, theoryII: 28, theoryIII: 27, internalI: 9, internalII: 10, internalIII: 10, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5503", theoryI: 25, theoryII: 21, theoryIII: 31, internalI: 7, internalII: 5, internalIII: 5, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+            "24SED25742": { subjects: [ // BZC Group
+                { code: "5501", theoryI: 38, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5502", theoryI: 35, internalI: 20, practicalObt: 0, practicalInt: 0 }, 
+                { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5506", theoryI: 22, theoryII: 22, theoryIII: 21, internalI: 9, internalII: 9, internalIII: 9, practicalObt: 30, practicalInt: 10 }, 
+                { code: "5507", theoryI: 18, theoryII: 21, theoryIII: 21, internalI: 8, internalII: 4, internalIII: 6, practicalObt: 35, practicalInt: 10 }, 
+                { code: "5503", theoryI: 24, theoryII: 23, theoryIII: 24, internalI: 5, internalII: 5, internalIII: 6, practicalObt: 30, practicalInt: 10 }, 
+            ]},
+            "24SED25743": { subjects: [ { code: "5501", theoryI: 35, internalI: 22, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 30, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 40, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 15, theoryII: 15, theoryIII: 16, internalI: 7, internalII: 7, internalIII: 5, practicalObt: 45, practicalInt: 12 }, { code: "5507", theoryI: 11, theoryII: 17, theoryIII: 21, internalI: 5, internalII: 6, internalIII: 6, practicalObt: 48, practicalInt: 10 }, { code: "5503", theoryI: 24, theoryII: 22, theoryIII: 18, internalI: 6, internalII: 4, internalIII: 5, practicalObt: 40, practicalInt: 10 }, ]},
+            "24SED25744": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 11, theoryII: 9, theoryIII: 14, internalI: 7, internalII: 6, internalIII: 5, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 13, theoryII: 15, theoryIII: 9, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 35, practicalInt: 6 }, { code: "5503", theoryI: 20, theoryII: 14, theoryIII: 18, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 10 }, ]},
+            "24SED25745": { subjects: [ { code: "5501", theoryI: 42, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 38, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 48, practicalObt: 0, practicalInt: 0 }, { code: "5504", theoryI: 19, theoryII: 19, theoryIII: 20, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 8 }, { code: "5505", theoryI: 30, theoryII: 25, theoryIII: 34, internalI: 7, internalII: 11, internalIII: 8, practicalObt: 0, practicalInt: 0 }, { code: "5503", theoryI: 22, theoryII: 20, theoryIII: 27, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 29, practicalInt: 9 }, ]},
+            "24SED25746": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, { code: "5504", theoryI: 20, theoryII: 19, theoryIII: 20, internalI: 4, internalII: 4, internalIII: 6, practicalObt: 30, practicalInt: 9 }, { code: "5505", theoryI: 30, theoryII: 30, theoryIII: 28, internalI: 10, internalII: 10, internalIII: 9, practicalObt: 0, practicalInt: 0 }, { code: "5503", theoryI: 22, theoryII: 25, theoryIII: 25, internalI: 6, internalII: 5, internalIII: 5, practicalObt: 27, practicalInt: 10 }, ]},
+            "24SED25747": { subjects: [ { code: "5501", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, { code: "5504", theoryI: 22, theoryII: 21, theoryIII: 22, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 32, practicalInt: 10 }, { code: "5505", theoryI: 23, theoryII: 30, theoryIII: 29, internalI: 9, internalII: 8, internalIII: 10, practicalObt: 0, practicalInt: 0 }, { code: "5503", theoryI: 30, theoryII: 21, theoryIII: 26, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 35, practicalInt: 11 }, ]},
+            "24SED25748": { subjects: [ { code: "5501", theoryI: 38, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 23, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 42, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 25, theoryII: 27, theoryIII: 28, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 18, theoryII: 16, theoryIII: 16, internalI: 5, internalII: 6, internalIII: 5, practicalObt: 35, practicalInt: 9 }, { code: "5503", theoryI: 28, theoryII: 30, theoryIII: 22, internalI: 7, internalII: 5, internalIII: 7, practicalObt: 40, practicalInt: 10 }, ]},
+            "24SED25750": { subjects: [ { code: "5501", theoryI: 43, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 56, internalI: 21, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 38, practicalObt: 0, practicalInt: 0 }, { code: "5504", theoryI: 20, theoryII: 28, theoryIII: 25, internalI: 9, internalII: 7, internalIII: 7, practicalObt: 35, practicalInt: 10 }, { code: "5505", theoryI: 43, theoryII: 46, theoryIII: 48, internalI: 11, internalII: 11, internalIII: 10, practicalObt: 0, practicalInt: 0 }, { code: "5503", theoryI: 29, theoryII: 30, theoryIII: 32, internalI: 7, internalII: 7, internalIII: 5, practicalObt: 38, practicalInt: 10 }, ]},
+            "24SED25751": { subjects: [ { code: "5501", theoryI: 40, internalI: 21, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 38, internalI: 19, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5504", theoryI: 15, theoryII: 12, theoryIII: 12, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 38, practicalInt: 10 }, // Theory Ext < 42
+                { code: "5505", theoryI: 29, theoryII: 27, theoryIII: 31, internalI: 12, internalII: 10, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // PASS
+                { code: "5503", theoryI: 30, theoryII: 32, theoryIII: 30, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 45, practicalInt: 12 }, 
+            ]},
+            "24SED25752": { subjects: [ { code: "5501", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 23, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 42, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 9, theoryII: 17, theoryIII: 17, internalI: 9, internalII: 7, internalIII: 6, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 21, theoryII: 21, theoryIII: 19, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 31, practicalInt: 8 }, { code: "5503", theoryI: 16, theoryII: 11, theoryIII: 22, internalI: 6, internalII: 5, internalIII: 4, practicalObt: 37, practicalInt: 10 }, ]},
+            "24SED25753": { subjects: [ { code: "5501", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 45, practicalObt: 0, practicalInt: 0 }, { code: "5504", theoryI: 21, theoryII: 20, theoryIII: 21, internalI: 7, internalII: 6, internalIII: 6, practicalObt: 40, practicalInt: 12 }, { code: "5505", theoryI: 22, theoryII: 26, theoryIII: 31, internalI: 12, internalII: 10, internalIII: 10, practicalObt: 0, practicalInt: 0 }, { code: "5503", theoryI: 20, theoryII: 22, theoryIII: 20, internalI: 6, internalII: 7, internalIII: 7, practicalObt: 27, practicalInt: 12 }, ]},
+            "24SED25754": { subjects: [ { code: "5501", theoryI: 34, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 38, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, { code: "5504", theoryI: 10, theoryII: 18, theoryIII: 15, internalI: 4, internalII: 3, internalIII: 4, practicalObt: 25, practicalInt: 8 }, // Theory Ext < 42
+                { code: "5505", theoryI: 33, theoryII: 14, theoryIII: 25, internalI: 8, internalII: 9, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // Theory Ext < 72
+                { code: "5503", theoryI: 25, theoryII: 17, theoryIII: 21, internalI: 4, internalII: 5, internalIII: 6, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+            "24SED25755": { subjects: [ { code: "5501", theoryI: 35, internalI: 22, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 40, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 17, theoryII: 10, theoryIII: 12, internalI: 6, internalII: 4, internalIII: 7, practicalObt: 35, practicalInt: 10 }, // Theory Ext < 42
+                { code: "5505", theoryI: 28, theoryII: 30, theoryIII: 29, internalI: 7, internalII: 10, internalIII: 8, practicalObt: 0, practicalInt: 0 }, // PASS
+                { code: "5503", theoryI: 22, theoryII: 19, theoryIII: 18, internalI: 6, internalII: 5, internalIII: 5, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+            "24SED25756": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 10, theoryII: 11, theoryIII: 10, internalI: 4, internalII: 3, internalIII: 4, practicalObt: 25, practicalInt: 8 }, // Theory Ext < 42
+                { code: "5505", theoryI: 20, theoryII: 20, theoryIII: 25, internalI: 8, internalII: 9, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // Theory Ext < 72
+                { code: "5503", theoryI: 19, theoryII: 17, theoryIII: 17, internalI: 5, internalII: 5, internalIII: 6, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+            "24SED25757": { subjects: [ { code: "5501", theoryI: 45, internalI: 17, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 40, internalI: 15, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 28, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 15, theoryII: 16, theoryIII: 7, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 50, practicalInt: 15 }, { code: "5507", theoryI: 18, theoryII: 81, theoryIII: 18, internalI: 6, internalII: 5, internalIII: 5, practicalObt: 35, practicalInt: 9 }, { code: "5503", theoryI: 20, theoryII: 20, theoryIII: 20, internalI: 5, internalII: 6, internalIII: 5, practicalObt: 27, practicalInt: 7 }, ]},
+            "24SED25758": { subjects: [ { code: "5501", theoryI: 38, internalI: 21, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 22, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 32, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 17, theoryII: 17, theoryIII: 18, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 30, practicalInt: 9 }, { code: "5507", theoryI: 19, theoryII: 12, theoryIII: 19, internalI: 6, internalII: 7, internalIII: 7, practicalObt: 25, practicalInt: 12 }, { code: "5503", theoryI: 28, theoryII: 21, theoryIII: 24, internalI: 7, internalII: 5, internalIII: 7, practicalObt: 29, practicalInt: 10 }, ]},
+            "24SED25759": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 20, theoryII: 20, theoryIII: 15, internalI: 4, internalII: 4, internalIII: 4, practicalObt: 27, practicalInt: 10 }, { code: "5507", theoryI: 22, theoryII: 22, theoryIII: 17, internalI: 8, internalII: 6, internalIII: 4, practicalObt: 35, practicalInt: 7 }, { code: "5503", theoryI: 16, theoryII: 12, theoryIII: 20, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 10 }, ]},
+            "24SED25760": { subjects: [ { code: "5501", theoryI: 37, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 41, internalI: 19, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 35, practicalObt: 0, practicalInt: 0 }, 
+                { code: "5504", theoryI: 16, theoryII: 11, theoryIII: 10, internalI: 4, internalII: 3, internalIII: 4, practicalObt: 25, practicalInt: 8 }, // Theory Ext < 42
+                { code: "5505", theoryI: 27, theoryII: 19, theoryIII: 25, internalI: 8, internalII: 9, internalIII: 10, practicalObt: 0, practicalInt: 0 }, // Theory Ext < 72
+                { code: "5503", theoryI: 17, theoryII: 21, theoryIII: 18, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 40, practicalInt: 10 }, 
+            ]},
+            "24SED25761": { subjects: [ { code: "5501", theoryI: 40, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 23, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 42, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 11, theoryII: 17, theoryIII: 11, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 33, practicalInt: 10 }, { code: "5507", theoryI: 21, theoryII: 17, theoryIII: 15, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 35, practicalInt: 12 }, { code: "5503", theoryI: 18, theoryII: 16, theoryIII: 22, internalI: 6, internalII: 5, internalIII: 4, practicalObt: 32, practicalInt: 10 }, ]},
+            "24SED25762": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 20, theoryII: 16, theoryIII: 19, internalI: 7, internalII: 4, internalIII: 7, practicalObt: 29, practicalInt: 10 }, { code: "5507", theoryI: 18, theoryII: 18, theoryIII: 19, internalI: 7, internalII: 7, internalIII: 4, practicalObt: 35, practicalInt: 6 }, { code: "5503", theoryI: 20, theoryII: 20, theoryIII: 21, internalI: 6, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 8 }, ]},
+            "24SED25764": { subjects: [ { code: "5501", theoryI: 45, internalI: 21, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 40, internalI: 19, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 48, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 25, theoryII: 19, theoryIII: 22, internalI: 6, internalII: 6, internalIII: 8, practicalObt: 40, practicalInt: 7 }, { code: "5507", theoryI: 18, theoryII: 25, theoryIII: 28, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 35, practicalInt: 9 }, { code: "5503", theoryI: 28, theoryII: 27, theoryIII: 22, internalI: 6, internalII: 7, internalIII: 5, practicalObt: 50, practicalInt: 15 }, ]},
+            "24SED25765": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 11, theoryII: 20, theoryIII: 15, internalI: 6, internalII: 6, internalIII: 7, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 9, theoryII: 16, theoryIII: 21, internalI: 5, internalII: 4, internalIII: 4, practicalObt: 35, practicalInt: 10 }, { code: "5503", theoryI: 18, theoryII: 20, theoryIII: 20, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 27, practicalInt: 10 }, ]},
+            "24SED25766": { subjects: [ { code: "5501", theoryI: 45, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 48, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 15, theoryII: 19, theoryIII: 20, internalI: 7, internalII: 7, internalIII: 6, practicalObt: 40, practicalInt: 11 }, { code: "5507", theoryI: 20, theoryII: 18, theoryIII: 17, internalI: 6, internalII: 6, internalIII: 6, practicalObt: 35, practicalInt: 7 }, { code: "5503", theoryI: 30, theoryII: 22, theoryIII: 32, internalI: 8, internalII: 7, internalIII: 6, practicalObt: 44, practicalInt: 9 }, ]},
+            "24SED25767": { subjects: [ { code: "5501", theoryI: 38, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 23, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 42, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 25, theoryII: 17, theoryIII: 28, internalI: 8, internalII: 7, internalIII: 7, practicalObt: 40, practicalInt: 10 }, { code: "5507", theoryI: 18, theoryII: 22, theoryIII: 15, internalI: 6, internalII: 6, internalIII: 6, practicalObt: 43, practicalInt: 12 }, { code: "5503", theoryI: 28, theoryII: 22, theoryIII: 26, internalI: 7, internalII: 6, internalIII: 4, practicalObt: 40, practicalInt: 8 }, ]},
+            "24SED25768": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 20, theoryII: 20, theoryIII: 15, internalI: 6, internalII: 6, internalIII: 6, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 18, theoryII: 25, theoryIII: 21, internalI: 5, internalII: 4, internalIII: 8, practicalObt: 35, practicalInt: 10 }, { code: "5503", theoryI: 22, theoryII: 22, theoryIII: 20, internalI: 6, internalII: 7, internalIII: 5, practicalObt: 30, practicalInt: 10 }, ]},
+            "24SED25769": { subjects: [ { code: "5501", theoryI: 59, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 48, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 32, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 26, theoryII: 22, theoryIII: 26, internalI: 7, internalII: 7, internalIII: 7, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 28, theoryII: 25, theoryIII: 31, internalI: 6, internalII: 8, internalIII: 7, practicalObt: 35, practicalInt: 10 }, { code: "5503", theoryI: 26, theoryII: 26, theoryIII: 29, internalI: 7, internalII: 8, internalIII: 5, practicalObt: 30, practicalInt: 10 }, ]},
+            "24SED25770": { subjects: [ { code: "5501", theoryI: 61, internalI: 24, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 58, internalI: 27, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 46, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 26, theoryII: 34, theoryIII: 26, internalI: 9, internalII: 9, internalIII: 9, practicalObt: 53, practicalInt: 13 }, { code: "5507", theoryI: 25, theoryII: 27, theoryIII: 23, internalI: 9, internalII: 9, internalIII: 9, practicalObt: 45, practicalInt: 13 }, { code: "5503", theoryI: 30, theoryII: 29, theoryIII: 32, internalI: 8, internalII: 8, internalIII: 8, practicalObt: 49, practicalInt: 13 }, ]},
+            "24SED25771": { subjects: [ { code: "5501", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 23, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 42, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 18, theoryII: 17, theoryIII: 18, internalI: 6, internalII: 7, internalIII: 6, practicalObt: 38, practicalInt: 10 }, { code: "5507", theoryI: 19, theoryII: 21, theoryIII: 15, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 35, practicalInt: 12 }, { code: "5503", theoryI: 28, theoryII: 18, theoryIII: 22, internalI: 6, internalII: 5, internalIII: 4, practicalObt: 36, practicalInt: 10 }, ]},
+            "24SED25772": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 20, theoryII: 20, theoryIII: 19, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 17, theoryII: 15, theoryIII: 19, internalI: 6, internalII: 6, internalIII: 6, practicalObt: 35, practicalInt: 9 }, { code: "5503", theoryI: 20, theoryII: 22, theoryIII: 23, internalI: 6, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 10 }, ]},
+            "24SED25773": { subjects: [ { code: "5501", theoryI: 59, internalI: 24, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 51, internalI: 23, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 37, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 30, theoryII: 20, theoryIII: 25, internalI: 9, internalII: 8, internalIII: 9, practicalObt: 45, practicalInt: 11 }, { code: "5507", theoryI: 25, theoryII: 25, theoryIII: 19, internalI: 8, internalII: 8, internalIII: 8, practicalObt: 39, practicalInt: 15 }, { code: "5503", theoryI: 31, theoryII: 32, theoryIII: 33, internalI: 8, internalII: 9, internalIII: 7, practicalObt: 38, practicalInt: 13 }, ]},
+            "24SED25774": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 20, theoryII: 20, theoryIII: 25, internalI: 4, internalII: 4, internalIII: 4, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 25, theoryII: 25, theoryIII: 25, internalI: 4, internalII: 4, internalIII: 4, practicalObt: 35, practicalInt: 10 }, { code: "5503", theoryI: 20, theoryII: 22, theoryIII: 20, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 10 }, ]},
+            "24SED25775": { subjects: [ { code: "5501", theoryI: 45, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 48, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 30, theoryII: 30, theoryIII: 30, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 50, practicalInt: 15 }, { code: "5507", theoryI: 35, theoryII: 35, theoryIII: 35, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 55, practicalInt: 15 }, { code: "5503", theoryI: 30, theoryII: 30, theoryIII: 30, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 50, practicalInt: 15 }, ]},
+            "24SED25776": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 20, theoryII: 21, theoryIII: 19, internalI: 6, internalII: 7, internalIII: 6, practicalObt: 27, practicalInt: 10 }, { code: "5507", theoryI: 25, theoryII: 18, theoryIII: 19, internalI: 6, internalII: 6, internalIII: 4, practicalObt: 33, practicalInt: 7 }, { code: "5503", theoryI: 25, theoryII: 26, theoryIII: 25, internalI: 6, internalII: 7, internalIII: 5, practicalObt: 30, practicalInt: 10 }, ]},
+            "24SED25777": { subjects: [ { code: "5501", theoryI: 45, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 48, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 17, theoryII: 18, theoryIII: 18, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 29, practicalInt: 9 }, { code: "5507", theoryI: 15, theoryII: 15, theoryIII: 18, internalI: 7, internalII: 6, internalIII: 6, practicalObt: 35, practicalInt: 9 }, { code: "5503", theoryI: 21, theoryII: 17, theoryIII: 23, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 35, practicalInt: 11 }, ]},
+            "24SED25778": { subjects: [ { code: "5501", theoryI: 38, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 23, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 42, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 24, theoryII: 17, theoryIII: 18, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 31, practicalInt: 10 }, { code: "5507", theoryI: 20, theoryII: 21, theoryIII: 21, internalI: 6, internalII: 5, internalIII: 5, practicalObt: 35, practicalInt: 11 }, { code: "5503", theoryI: 28, theoryII: 30, theoryIII: 27, internalI: 6, internalII: 5, internalIII: 4, practicalObt: 40, practicalInt: 10 }, ]},
+            "24SED25780": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 20, theoryII: 20, theoryIII: 21, internalI: 7, internalII: 4, internalIII: 5, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 16, theoryII: 11, theoryIII: 11, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 35, practicalInt: 6 }, { code: "5503", theoryI: 26, theoryII: 25, theoryIII: 24, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 9 }, ]},
+            "24SED25781": { subjects: [ { code: "5501", theoryI: 40, internalI: 25, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 35, internalI: 23, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 42, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 22, theoryII: 17, theoryIII: 18, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 40, practicalInt: 10 }, { code: "5507", theoryI: 20, theoryII: 22, theoryIII: 16, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 35, practicalInt: 12 }, { code: "5503", theoryI: 28, theoryII: 30, theoryIII: 27, internalI: 4, internalII: 5, internalIII: 4, practicalObt: 40, practicalInt: 10 }, ]},
+            "24SED25744": { subjects: [ { code: "5501", theoryI: 30, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "5502", theoryI: 28, internalI: 20, practicalObt: 0, practicalInt: 0 }, { code: "E-202", theoryI: 0, internalI: 30, practicalObt: 0, practicalInt: 0 }, { code: "5506", theoryI: 11, theoryII: 9, theoryIII: 14, internalI: 7, internalII: 6, internalIII: 5, practicalObt: 30, practicalInt: 10 }, { code: "5507", theoryI: 13, theoryII: 15, theoryIII: 9, internalI: 6, internalII: 6, internalIII: 5, practicalObt: 35, practicalInt: 6 }, { code: "5503", theoryI: 20, theoryII: 14, theoryIII: 18, internalI: 5, internalII: 5, internalIII: 5, practicalObt: 30, practicalInt: 10 }, ]},
+        };
+
+
+        // --- 4. Utility Functions ---
+        // अंक को नंबर में बदलता है। (Handles 'AB' or '-' as 0)
+        function getNumberValue(value) {
+            if (value === null || value === undefined || value === '-' || value === 'AB') return 0;
+            if (typeof value === 'number') return value;
+            // Removes the '*' marker before parsing
+            const parsed = parseInt(String(value).replace('*', '').trim());
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        // 5. मार्कशीट बनाने का मुख्य फंक्शन
+        function displayMarksheet(studentDetails) {
+            const rollNumber = studentDetails.roll;
+            const studentMarks = ALL_STUDENTS_MARKS_DATA[rollNumber];
+
+            if (!studentMarks) {
+                 document.getElementById('message-box').textContent = `ERROR: Marksheet data not found for Roll No. '${rollNumber}'. Please check ALL_STUDENTS_MARKS_DATA.`;
+                 return;
+            }
+
+            // 1. Update Header Details
+            document.getElementById('detail-roll').textContent = studentDetails.roll;
+            document.getElementById('detail-name').textContent = studentDetails.name;
+            document.getElementById('detail-father').textContent = studentDetails.father;
+            document.getElementById('detail-mother').textContent = studentDetails.mother;
+            document.getElementById('detail-photo').src = studentDetails.photoUrl || 'https://placehold.co/100x120/E5E7EB/4B5563?text=Photo';
+            
+            const marksBody = document.getElementById('marks-body');
+            marksBody.innerHTML = ''; 
+            
+            let finalGrandTotalObtained = 0;
+            let resultStatus = 'PASS';
+            let reappearSubjects = [];
+            let currentGroup = null;
+            let isAbsent = (studentMarks.subjects?.[0]?.theoryI === 'AB');
+
+
+            // Step 1: Combine subject data with definitions and process
+            const processedSubjects = studentMarks.subjects.map(subjectData => {
+                const def = SUBJECT_DEFINITIONS.find(d => d.code === subjectData.code);
+                if (!def) return null;
+
+                const processed = { ...def, ...subjectData };
+
+                if (isAbsent) {
+                    processed.status = 'ABSENT';
+                    return processed;
+                }
+                
+                // --- 2. Calculate Totals ---
+                const marks = { 
+                    t1: getNumberValue(subjectData.theoryI), t2: getNumberValue(subjectData.theoryII), t3: getNumberValue(subjectData.theoryIII),
+                    i1: getNumberValue(subjectData.internalI), i2: getNumberValue(subjectData.internalII), i3: getNumberValue(subjectData.internalIII),
+                    pObt: getNumberValue(subjectData.practicalObt), pInt: getNumberValue(subjectData.practicalInt)
+                };
+                
+                // Theory External Total
+                processed.theoryExtTotal = 0;
+                // B.Ed Compulsory codes are 5501 and 5502
+                if (!def.internalOnly) {
+                    processed.theoryExtTotal = (def.code === '5501' || def.code === '5502') ? marks.t1 : (marks.t1 + marks.t2 + marks.t3);
+                }
+                
+                // Internal Total (Theory component internal marks only)
+                processed.internalTotal = (def.internalOnly || def.code === '5501' || def.code === '5502') ? marks.i1 : (marks.i1 + marks.i2 + marks.i3);
+                
+                // Subject Total (All marks combined)
+                processed.total = processed.theoryExtTotal + processed.internalTotal;
+                if (def.practical) {
+                    processed.total += (marks.pObt + marks.pInt);
+                }
+
+
+                // --- 3. Determine Status ---
+                processed.status = 'PASS';
+                let isReappear = false;
+                let isFail = false;
+                let reappearReason = [];
+                
+                // Rule 1: Theory External Component Pass Check (42 for Science, 25 for B.Ed Ext, 72 for Maths Ext)
+                if (processed.theoryExtTotal < def.extPass && !def.internalOnly) {
+                    isReappear = true;
+                    reappearReason.push("Theory");
+                }
+                
+                // Rule 2: Subject Total Minimum Check (Overall Pass Marks)
+                // Note: In real scenarios, overall pass marks often require passing external and internal separately.
+                // For simplicity here, we only check total pass mark against min mark.
+                if (processed.total < def.min) {
+                     // Check if only total is low, but ExtPass is met. If so, it might be a FAIL (due to overall min)
+                    if (!isReappear) {
+                         isFail = true;
+                    } else {
+                         // If already reappear in theory, just keep it as Re-appear, unless the total score is very low indicating a Fail
+                         isFail = false;
+                    }
+                }
+                
+                // Final Status Assignment & Reappear List Building
+                if (isFail) {
+                    processed.status = 'FAIL';
+                    resultStatus = 'FAIL';
+                    reappearSubjects.push(`${processed.name} (${processed.code}) - Total Marks Low`);
+                } else if (isReappear) {
+                    processed.status = 'RE-APPEAR';
+                    if (resultStatus === 'PASS') {
+                        resultStatus = 'RE-APPEAR';
+                    }
+                    reappearSubjects.push(`${processed.name} (${processed.code}) - Theory`);
+                } 
+                
+                return processed;
+            }).filter(s => s !== null);
+
+            // Sort subjects by group
+            const orderedSubjects = processedSubjects.sort((a, b) => {
+                const groupOrder = { "Compulsory Papers": 1, "Science Papers": 2 };
+                return groupOrder[a.group] - groupOrder[b.group];
+            });
+
+
+            // Step 4: Populate Table Rows and calculate Grand Total
+            orderedSubjects.forEach(subject => {
+                
+                if (subject.status !== 'ABSENT') {
+                    finalGrandTotalObtained += subject.total;
+                }
+                
+                // Update Overall Result status for ABSENT
+                if (subject.status === 'ABSENT') {
+                     resultStatus = 'ABSENT';
+                }
+
+                // Insert Group Header if group changes
+                if (subject.group !== currentGroup) {
+                    currentGroup = subject.group;
+                    const groupRow = document.createElement('tr');
+                    groupRow.innerHTML = `<td colspan="17" class="px-2 py-2 text-left font-extrabold text-xs bg-gray-200 text-gray-800 tracking-wider border-y border-gray-400 uppercase">${currentGroup}</td>`;
+                    marksBody.appendChild(groupRow);
+                }
+
+
+                // Determine status styling
+                const statusClass = getStatusClass(subject.status);
+
+                const isE202 = subject.code === 'E-202';
+                // Check against new B.Ed Compulsory codes (5501, 5502)
+                const isBED100 = subject.code === '5501' || subject.code === '5502'; 
+                
+                // Helper to get marks or '-'
+                const getMark = (mark) => (mark === 0 && !isAbsent) ? '-' : (isAbsent ? 'AB' : mark);
+
+                // Add '*' if Re-appear is due to low Theory Ext marks
+                let theoryExtDisplay = getMark(subject.theoryExtTotal);
+                if (subject.status === 'RE-APPEAR' && subject.theoryExtTotal < subject.extPass) {
+                    theoryExtDisplay = theoryExtDisplay.toString().replace('-', '0') + '*';
+                }
+
+                const theoryI = (isE202 || (subject.theoryI === 0 && !isBED100)) ? '-' : getMark(subject.theoryI);
+                const theoryII = (isE202 || isBED100) ? '-' : getMark(subject.theoryII);
+                const theoryIII = (isE202 || isBED100) ? '-' : getMark(subject.theoryIII);
+                
+                const internalI = getMark(subject.internalI);
+                const internalII = (isE202 || isBED100) ? '-' : getMark(subject.internalII);
+                const internalIII = (isE202 || isBED100) ? '-' : getMark(subject.internalIII);
+
+                const practicalObt = (subject.practical || isE202) ? getMark(subject.practicalObt) : '-';
+                const practicalInt = (subject.practical || isE202) ? getMark(subject.practicalInt) : '-';
+                
+                // Main Subject Row
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition duration-150';
+                row.innerHTML = `
+                    <td class="px-2 py-2 text-center font-semibold border-r">${subject.code}</td>
+                    <td class="px-2 py-2 text-left font-medium border-r whitespace-normal">${subject.name}</td>
+                    <td class="px-2 py-2 text-center border-r">${subject.max}</td>
+                    <td class="px-2 py-2 text-center border-r">${subject.min}</td>
+                    
+                    <td class="px-1 py-2 text-center border-r">${theoryI}</td>
+                    <td class="px-1 py-2 text-center border-r">${theoryII}</td>
+                    <td class="px-1 py-2 text-center border-r">${theoryIII}</td>
+                    <td class="px-2 py-2 text-center border-r font-semibold">${theoryExtDisplay}</td>
+
+                    <td class="px-1 py-2 text-center border-r">${internalI}</td>
+                    <td class="px-1 py-2 text-center border-r">${internalII}</td>
+                    <td class="px-1 py-2 text-center border-r">${internalIII}</td>
+                    <td class="px-2 py-2 text-center border-r font-semibold">${getMark(subject.internalTotal)}</td>
+                    
+                    <td class="px-2 py-2 text-center border-r">${practicalObt}</td>
+                    <td class="px-2 py-2 text-center border-r">${practicalInt}</td>
+                    
+                    <td class="px-2 py-2 text-center font-bold border-r text-gray-800">${isAbsent ? 'AB' : subject.total}</td>
+                    
+                    <td class="px-2 py-2 text-center">
+                        <span class="inline-block px-2 py-1 text-xs rounded-full ${statusClass}">${subject.status}</span>
+                    </td>
+                `;
+                marksBody.appendChild(row);
+            });
+
+            // 5. Update Grand Total in the Footer
+            document.getElementById('grand-total-obtained').textContent = resultStatus === 'ABSENT' ? 'AB' : finalGrandTotalObtained;
+            
+            // --- UPDATED RESULT FORMATTING LOGIC ---
+            let finalResultText = '';
+            if (resultStatus === 'ABSENT') {
+                finalResultText = 'ABSENT';
+            } else if (resultStatus === 'FAIL') {
+                finalResultText = 'FAIL';
+            } else if (reappearSubjects.length > 0) {
+                 // Build detailed RE-APPEAR string
+                const reappearDetails = reappearSubjects.map(detail => {
+                    // detail format: "Subject Name (Code) - Component"
+                    const parts = detail.split(' - ');
+                    const subjectInfo = parts[0]; 
+                    const component = parts[1];
+                    // The component part for Theory is already simple, just wrap it
+                    return `${subjectInfo} (${component})`; 
+                }).join(', ');
+                
+                finalResultText = `RE-APPEAR in ${reappearDetails}`;
+            } else {
+                finalResultText = 'PASS';
+            }
+            
+            document.getElementById('overall-result').innerHTML = formatResult(finalResultText);
+        }
+
+        // --- 6. UI और सर्च फंक्शन ---
+        function searchMarksheet() {
+            const rollInput = document.getElementById('roll-input').value.trim().toUpperCase();
+            const messageBox = document.getElementById('message-box');
+
+            // Clear any previous message
+            messageBox.textContent = ''; 
+            
+            // Check 1: If Roll Number is empty
+            if (!rollInput) {
+                messageBox.innerHTML = `<span class="text-red-400 font-bold">कृपया पहले रोल नंबर डालें।</span>`;
+                return;
+            }
+
+            const studentDetails = ALL_STUDENTS_DETAILS[rollInput];
+
+            // Check 2: Check if Student Details exists
+            if (!studentDetails) {
+                messageBox.innerHTML = `<span class="text-red-400 font-bold">ERROR: रोल नंबर '${rollInput}' का विवरण नहीं मिला।</span>`;
+                return;
+            }
+
+            // Check 3: Check if Marks Data exists
+            if (!ALL_STUDENTS_MARKS_DATA[rollInput]) {
+                messageBox.innerHTML = `<span class="text-red-400 font-bold">ERROR: रोल नंबर '${rollInput}' के अंकों का डेटा (MARKS_DATA) नहीं मिला।</span>`;
+                return;
+            }
+
+            displayMarksheet(studentDetails);
+
+            // Hide Search section and show Marksheet
+            document.getElementById('search-section').classList.add('hidden');
+            document.getElementById('fixed-header-search').classList.add('hidden');
+            document.querySelector('.search-footer').classList.add('hidden');
+            document.getElementById('marksheet-display').classList.remove('hidden');
+            setTimeout(() => document.getElementById('marksheet-display').classList.add('opacity-100'), 10); 
+        }
+
+        function resetRollInput() {
+            document.getElementById('roll-input').value = '';
+            document.getElementById('message-box').textContent = '';
+            document.getElementById('roll-input').focus();
+        }
+        
+        function handleKey(event) {
+            if (event.key === 'Enter') {
+                searchMarksheet();
+            }
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'PASS':
+                    return 'bg-green-100 text-green-700 font-bold';
+                case 'FAIL':
+                    return 'bg-red-100 text-red-700 font-bold';
+                case 'RE-APPEAR':
+                    return 'bg-yellow-100 text-yellow-700 font-bold';
+                case 'ABSENT':
+                    return 'bg-red-500 text-white font-bold';
+                default:
+                    return 'bg-gray-200 text-gray-800';
+            }
+        }
+
+        function formatResult(resultText) {
+            // Updated to handle long reappear string
+            const replacements = [
+                { keyword: 'RE-APPEAR', class: 'text-red-700 bg-red-100 p-1 rounded-md font-extrabold' },
+                { keyword: 'PASS', class: 'text-green-700 bg-green-100 p-1 rounded-md font-extrabold' },
+                { keyword: 'FAIL', class: 'text-red-700 bg-red-100 p-1 rounded-md font-extrabold' },
+                { keyword: 'ABSENT', class: 'text-white bg-red-500 p-1 rounded-md font-extrabold' }
+            ];
+            
+            let formattedText = resultText;
+            
+            replacements.forEach(({ keyword, class: className }) => {
+                const regex = new RegExp(keyword, 'g');
+                formattedText = formattedText.replace(regex, `<span class="${className}">${keyword}</span>`);
+            });
+            return formattedText;
+        }
+
+        function resetApp() {
+            document.getElementById('marksheet-display').classList.remove('opacity-100');
+            
+            setTimeout(() => {
+                document.getElementById('marksheet-display').classList.add('hidden');
+                document.getElementById('search-section').classList.remove('hidden');
+                document.getElementById('fixed-header-search').classList.remove('hidden');
+                document.querySelector('.search-footer').classList.remove('hidden');
+            }, 300); 
+
+            document.getElementById('roll-input').value = '';
+            document.getElementById('message-box').textContent = '';
+            document.getElementById('roll-input').focus();
+        }
+
+        window.onload = () => {
+            document.getElementById('roll-input').focus();
+        };
+
+    </script>
+</body>
+</html>
+
